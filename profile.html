@@ -1,0 +1,127 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的 - 资产领航 V6 Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-sm text-gray-800">
+<header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
+  <h1 class="text-lg font-bold text-purple-600">⚙️ 我的设置</h1>
+</header>
+<main class="p-4 max-w-3xl mx-auto space-y-6">
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">📤 数据导出</h2>
+    <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded-xl">导出备份</button>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">📥 数据导入</h2>
+    <input type="file" id="importFile" accept=".json" class="border p-2 rounded w-full" />
+    <button onclick="importData()" class="bg-green-600 text-white px-4 py-2 rounded-xl">导入数据</button>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">🗑️ 清空所有数据</h2>
+    <button onclick="clearAll()" class="bg-red-600 text-white px-4 py-2 rounded-xl">清空本地缓存</button>
+    <p class="text-xs text-gray-400">数据保存在浏览器本地，仅当前设备有效。</p>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">🧠 AI 理财分析建议</h2>
+    <button onclick="analyzeFinance()" class="bg-purple-600 text-white px-4 py-2 rounded-xl">生成建议</button>
+    <pre id="adviceOutput" class="text-sm text-gray-700 bg-gray-100 rounded-xl p-3 whitespace-pre-line"></pre>
+  </section>
+
+</main>
+
+<script>
+function exportData() {
+  const data = {
+    assets: JSON.parse(localStorage.getItem('assets') || '[]'),
+    debts: JSON.parse(localStorage.getItem('debts') || '[]'),
+    transactions: JSON.parse(localStorage.getItem('transactions') || '[]')
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'finapp_backup.json';
+  link.click();
+}
+
+function importData() {
+  const file = document.getElementById('importFile').files[0];
+  if (!file) return alert('请选择文件');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.assets) localStorage.setItem('assets', JSON.stringify(data.assets));
+      if (data.debts) localStorage.setItem('debts', JSON.stringify(data.debts));
+      if (data.transactions) localStorage.setItem('transactions', JSON.stringify(data.transactions));
+      alert('数据导入成功，页面将刷新');
+      location.reload();
+    } catch (err) {
+      alert('文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (confirm("确定清空所有数据？此操作无法恢复")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+function analyzeFinance() {
+  const assets = JSON.parse(localStorage.getItem('assets') || '[]');
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+
+  let assetTotal = 0, debtTotal = 0;
+  assets.forEach(a => {
+    const value = a.category === "股票" && a.price ? a.amount * a.price : a.amount;
+    assetTotal += value;
+  });
+  debts.forEach(d => debtTotal += parseFloat(d.remaining));
+
+  let incomeMap = {}, expenseMap = {};
+  tx.forEach(t => {
+    const ym = t.date?.slice(0, 7);
+    if (!ym) return;
+    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
+    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
+  });
+
+  const months = Object.keys(incomeMap).sort().slice(-3);
+  const recentMonth = months[months.length - 1] || '最近月份';
+  const income = incomeMap[recentMonth] || 0;
+  const expense = expenseMap[recentMonth] || 0;
+  const net = income - expense;
+  const ratio = income > 0 ? Math.round((expense / income) * 100) : 0;
+  const assetDebtRatio = debtTotal > 0 ? (assetTotal / debtTotal).toFixed(2) : '∞';
+
+  let tips = `📅 分析月份：${recentMonth}
+💰 收入：¥${income.toFixed(2)}，支出：¥${expense.toFixed(2)}，结余：¥${net.toFixed(2)}
+📊 支出占收入比：${ratio}%
+📉 资产负债比：${assetDebtRatio}`;
+
+  if (ratio > 80) tips += `
+⚠️ 支出过高，建议缩减开销、设立预算目标。`;
+  if (assetDebtRatio < 2) tips += `
+⚠️ 资产负债比偏低，注意控制债务规模。`;
+  if (net > 0) tips += `
+✅ 有稳定结余，可考虑提升储蓄或投资比例。`;
+  if (net < 0) tips += `
+⚠️ 本月支出大于收入，需警惕财务赤字。`;
+
+  document.getElementById('adviceOutput').textContent = tips;
+}
+</script>
+</body>
+</html>
