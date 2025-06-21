@@ -4,98 +4,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>负债页 - 资产领航 V6 Pro</title>
+  <title>报表页 - 资产领航 V6 Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-sm text-gray-800">
 <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-  <h1 class="text-lg font-bold text-red-600">💳 负债管理</h1>
+  <h1 class="text-lg font-bold text-green-600">📈 收支趋势报表</h1>
 </header>
 <main class="p-4 max-w-3xl mx-auto space-y-6">
 
-<section id="debts" class="tab-content space-y-4">
-  <div class="bg-white shadow rounded-2xl p-6">
-    <h2 class="text-lg font-bold text-gray-700 mb-3">💳 添加负债</h2>
-    <form id="debtForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input id="debtName" placeholder="名称" class="border rounded-xl p-2" required />
-      <input id="debtAmount" type="number" placeholder="总金额" class="border rounded-xl p-2" required />
-      <input id="debtRemaining" type="number" placeholder="剩余未还" class="border rounded-xl p-2" required />
-      <input id="debtDue" type="date" class="border rounded-xl p-2" required />
-      <select id="debtCategory" class="border rounded-xl p-2">
-        <option value="信用卡">信用卡</option>
-        <option value="贷款">贷款</option>
-        <option value="借款">借款</option>
+  <section class="bg-white shadow rounded-2xl p-6 space-y-3">
+    <h2 class="text-base font-semibold text-gray-700">添加记录</h2>
+    <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <select id="recordType" class="border rounded-xl p-2">
+        <option value="收入">收入</option>
+        <option value="支出">支出</option>
       </select>
-      <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700 transition">➕ 添加</button>
+      <input id="recordCategory" placeholder="分类（如 工资 / 餐饮）" class="border rounded-xl p-2" required />
+      <input id="recordAmount" type="number" placeholder="金额" class="border rounded-xl p-2" required />
+      <input id="recordDate" type="date" class="border rounded-xl p-2" required />
+      <button type="submit" class="col-span-2 bg-green-600 text-white py-2 rounded-xl">➕ 添加记录</button>
     </form>
-  </div>
-  <div id="debtList" class="space-y-3 pt-2"></div>
-</section>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-4">
+    <div class="flex flex-wrap gap-3 justify-between items-center">
+      <h2 class="text-base font-semibold text-gray-700">📊 收支趋势图</h2>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500">分类：</label>
+        <select id="filterCategory" class="border rounded p-1 text-sm">
+          <option value="全部">全部</option>
+        </select>
+        <label class="text-xs text-gray-500">维度：</label>
+        <select id="filterMode" class="border rounded p-1 text-sm">
+          <option value="month">月</option>
+          <option value="quarter">季</option>
+          <option value="year">年</option>
+        </select>
+      </div>
+    </div>
+    <canvas id="trendChart" height="300"></canvas>
+  </section>
 
 </main>
+
 <script>
-
-const debtForm = document.getElementById('debtForm');
-const debtList = document.getElementById('debtList');
-
-debtForm.onsubmit = e => {
+document.getElementById("recordForm").onsubmit = e => {
   e.preventDefault();
-  const name = document.getElementById('debtName').value;
-  const amount = parseFloat(document.getElementById('debtAmount').value);
-  const remaining = parseFloat(document.getElementById('debtRemaining').value);
-  const dueDate = document.getElementById('debtDue').value;
-  const category = document.getElementById('debtCategory').value;
-  if (!name || isNaN(amount) || isNaN(remaining) || !dueDate) return alert("请填写完整");
+  const type = document.getElementById("recordType").value;
+  const category = document.getElementById("recordCategory").value;
+  const amount = parseFloat(document.getElementById("recordAmount").value);
+  const date = document.getElementById("recordDate").value;
+  if (!category || isNaN(amount) || !date) return alert("请输入完整记录");
 
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.push({ name, amount, remaining, dueDate, category });
-  localStorage.setItem('debts', JSON.stringify(debts));
-  debtForm.reset();
-  renderDebts();
+  const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  tx.push({ type, category, amount, date });
+  localStorage.setItem("transactions", JSON.stringify(tx));
+  e.target.reset();
+  loadTrends();
 };
 
-function renderDebts() {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debtList.innerHTML = '';
-  const today = new Date();
+function getPeriod(dateStr, mode) {
+  const d = new Date(dateStr);
+  if (mode === "year") return d.getFullYear().toString();
+  if (mode === "quarter") return d.getFullYear() + "Q" + (Math.floor(d.getMonth() / 3) + 1);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0');
+}
 
-  debts.forEach((d, i) => {
-    const due = new Date(d.dueDate);
-    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
-    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
+function loadTrends() {
+  const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const filterCat = document.getElementById("filterCategory").value;
+  const mode = document.getElementById("filterMode").value;
 
-    const card = document.createElement('div');
-    card.className = "bg-white p-4 rounded-xl shadow border-l-8 " + 
-      (d.category === "信用卡" ? "border-pink-500" :
-       d.category === "贷款" ? "border-yellow-500" : "border-indigo-500");
+  const incomeMap = {}, expenseMap = {}, labelsSet = new Set(), cats = new Set();
 
-    card.innerHTML = `
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="text-base font-semibold">${d.name}（${d.category}）</div>
-          <div class="text-xs text-gray-500">到期：${d.dueDate} <span class="text-red-600">${warn}</span></div>
-          <div class="text-sm text-gray-600">剩余：¥${d.remaining.toFixed(2)} / 总额 ¥${d.amount.toFixed(2)}</div>
-        </div>
-        <button onclick="removeDebt(${i})" class="text-red-500 hover:underline text-sm">🗑 删除</button>
-      </div>
-      <div class="w-full bg-gray-200 rounded h-2 mt-3">
-        <div class="bg-gradient-to-r from-red-400 to-red-600 h-2 rounded" style="width:${progress}%"></div>
-      </div>
-    `;
-    debtList.appendChild(card);
+  tx.forEach(t => {
+    cats.add(t.category);
+    if (filterCat !== "全部" && t.category !== filterCat) return;
+    const key = getPeriod(t.date, mode);
+    labelsSet.add(key);
+    if (t.type === "收入") incomeMap[key] = (incomeMap[key] || 0) + t.amount;
+    if (t.type === "支出") expenseMap[key] = (expenseMap[key] || 0) + t.amount;
+  });
+
+  const labels = Array.from(labelsSet).sort();
+  const income = labels.map(k => incomeMap[k] || 0);
+  const expense = labels.map(k => expenseMap[k] || 0);
+  const net = labels.map((_, i) => income[i] - expense[i]);
+
+  const ctx = document.getElementById("trendChart").getContext("2d");
+  if (window.trendChart) window.trendChart.destroy();
+  window.trendChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { type: "bar", label: "收入", data: income, backgroundColor: "#10b981" },
+        { type: "bar", label: "支出", data: expense, backgroundColor: "#ef4444" },
+        { type: "line", label: "结余", data: net, borderColor: "#3b82f6", tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "bottom" } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  const catSelect = document.getElementById("filterCategory");
+  catSelect.innerHTML = '<option value="全部">全部</option>';
+  Array.from(cats).sort().forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = c;
+    catSelect.appendChild(opt);
   });
 }
 
-function removeDebt(i) {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.splice(i, 1);
-  localStorage.setItem('debts', JSON.stringify(debts));
-  renderDebts();
-}
+document.getElementById("filterCategory").onchange =
+document.getElementById("filterMode").onchange = loadTrends;
 
-renderDebts();
-
+loadTrends();
 </script>
 </body>
 </html>
