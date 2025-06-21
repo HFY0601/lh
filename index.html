@@ -4,115 +4,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>资产页 - 资产领航 V6 Pro</title>
+  <title>负债页 - 资产领航 V6 Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-sm text-gray-800">
 <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-  <h1 class="text-lg font-bold text-blue-600">💼 资产管理</h1>
+  <h1 class="text-lg font-bold text-red-600">💳 负债管理</h1>
 </header>
 <main class="p-4 max-w-3xl mx-auto space-y-6">
 
-<section id="assets" class="tab-content">
-  <div class="bg-white shadow rounded-2xl p-6 space-y-4">
-    <h2 class="text-lg font-bold text-gray-700">💼 添加资产</h2>
-    <form id="assetForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input id="name" placeholder="资产名称" class="border rounded-xl p-2" required />
-      <input id="amount" type="number" placeholder="持有数量" class="border rounded-xl p-2" required />
-      <select id="category" class="border rounded-xl p-2">
-        <option value="现金">现金</option>
-        <option value="股票">股票</option>
+<section id="debts" class="tab-content space-y-4">
+  <div class="bg-white shadow rounded-2xl p-6">
+    <h2 class="text-lg font-bold text-gray-700 mb-3">💳 添加负债</h2>
+    <form id="debtForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <input id="debtName" placeholder="名称" class="border rounded-xl p-2" required />
+      <input id="debtAmount" type="number" placeholder="总金额" class="border rounded-xl p-2" required />
+      <input id="debtRemaining" type="number" placeholder="剩余未还" class="border rounded-xl p-2" required />
+      <input id="debtDue" type="date" class="border rounded-xl p-2" required />
+      <select id="debtCategory" class="border rounded-xl p-2">
+        <option value="信用卡">信用卡</option>
+        <option value="贷款">贷款</option>
+        <option value="借款">借款</option>
       </select>
-      <input id="code" placeholder="股票代码（如 sh600519）" class="border rounded-xl p-2" />
-      <button type="submit" class="col-span-2 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">➕ 添加</button>
+      <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700 transition">➕ 添加</button>
     </form>
   </div>
-
-  <div id="assetList" class="space-y-3 pt-4"></div>
+  <div id="debtList" class="space-y-3 pt-2"></div>
 </section>
 
 </main>
 <script>
 
-const assetForm = document.getElementById('assetForm');
-const assetList = document.getElementById('assetList');
+const debtForm = document.getElementById('debtForm');
+const debtList = document.getElementById('debtList');
 
-assetForm.onsubmit = e => {
+debtForm.onsubmit = e => {
   e.preventDefault();
-  const name = document.getElementById('name').value.trim();
-  const amount = parseFloat(document.getElementById('amount').value);
-  const category = document.getElementById('category').value;
-  const code = document.getElementById('code').value.trim().toLowerCase();
-  if (!name || isNaN(amount)) return alert("请输入正确资产");
+  const name = document.getElementById('debtName').value;
+  const amount = parseFloat(document.getElementById('debtAmount').value);
+  const remaining = parseFloat(document.getElementById('debtRemaining').value);
+  const dueDate = document.getElementById('debtDue').value;
+  const category = document.getElementById('debtCategory').value;
+  if (!name || isNaN(amount) || isNaN(remaining) || !dueDate) return alert("请填写完整");
 
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  data.push({ name, amount, category, code });
-  localStorage.setItem('assets', JSON.stringify(data));
-  assetForm.reset();
-  renderAssets();
-  fetchPrices();
-  renderOverview();
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.push({ name, amount, remaining, dueDate, category });
+  localStorage.setItem('debts', JSON.stringify(debts));
+  debtForm.reset();
+  renderDebts();
 };
 
-function renderAssets() {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  assetList.innerHTML = '';
-  data.forEach((a, i) => {
-    const div = document.createElement('div');
-    div.className = "bg-white p-4 rounded-xl shadow flex justify-between items-center border-l-4 " + 
-      (a.category === "股票" ? "border-blue-500" : "border-green-500");
-    div.setAttribute("data-code", a.code);
-    div.setAttribute("data-amount", a.amount);
-    div.innerHTML = `
-      <div>
-        <div class="text-base font-semibold">${a.name}</div>
-        <div class="text-xs text-gray-500">${a.category} ${a.code || ''}</div>
-        <div class="text-sm price text-gray-600">加载中...</div>
-        <div class="text-blue-600 font-bold value">--</div>
+function renderDebts() {
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debtList.innerHTML = '';
+  const today = new Date();
+
+  debts.forEach((d, i) => {
+    const due = new Date(d.dueDate);
+    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
+    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
+
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded-xl shadow border-l-8 " + 
+      (d.category === "信用卡" ? "border-pink-500" :
+       d.category === "贷款" ? "border-yellow-500" : "border-indigo-500");
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-base font-semibold">${d.name}（${d.category}）</div>
+          <div class="text-xs text-gray-500">到期：${d.dueDate} <span class="text-red-600">${warn}</span></div>
+          <div class="text-sm text-gray-600">剩余：¥${d.remaining.toFixed(2)} / 总额 ¥${d.amount.toFixed(2)}</div>
+        </div>
+        <button onclick="removeDebt(${i})" class="text-red-500 hover:underline text-sm">🗑 删除</button>
       </div>
-      <button onclick="removeAsset(${i})" class="text-red-500 hover:underline text-sm">🗑 删除</button>
+      <div class="w-full bg-gray-200 rounded h-2 mt-3">
+        <div class="bg-gradient-to-r from-red-400 to-red-600 h-2 rounded" style="width:${progress}%"></div>
+      </div>
     `;
-    assetList.appendChild(div);
+    debtList.appendChild(card);
   });
 }
 
-function removeAsset(i) {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  data.splice(i, 1);
-  localStorage.setItem('assets', JSON.stringify(data));
-  renderAssets();
-  fetchPrices();
-  renderOverview();
+function removeDebt(i) {
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.splice(i, 1);
+  localStorage.setItem('debts', JSON.stringify(debts));
+  renderDebts();
 }
 
-function fetchPrices() {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  const codes = data.filter(a => a.category === '股票' && a.code).map(a => a.code);
-  if (!codes.length) return;
-  fetch('https://qt.gtimg.cn/q=' + codes.join(','))
-    .then(res => res.text())
-    .then(text => {
-      codes.forEach(code => {
-        const m = text.match(new RegExp(`v_${code}="(.*?)";`));
-        if (!m) return;
-        const price = parseFloat(m[1].split('~')[3]);
-        const assetData = JSON.parse(localStorage.getItem('assets') || '[]');
-        assetData.forEach(a => { if (a.code === code) a.price = price; });
-        localStorage.setItem('assets', JSON.stringify(assetData));
-
-        document.querySelectorAll('[data-code="' + code + '"]').forEach(div => {
-          const amt = parseFloat(div.getAttribute('data-amount'));
-          div.querySelector('.price').textContent = '现价 ¥' + price.toFixed(2);
-          div.querySelector('.value').textContent = '市值 ¥' + (amt * price).toFixed(2);
-        });
-        renderOverview();
-      });
-    });
-}
-
-renderAssets();
-fetchPrices();
+renderDebts();
 
 </script>
 </body>
