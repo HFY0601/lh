@@ -1,13 +1,12 @@
-﻿
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>负债页 - 资产领航 V6 Pro</title>
+  <title>💳 负债页面内容</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 text-sm">
+<body class="bg-gray-50 text-sm text-gray-800">
 
 <nav class="grid grid-cols-5 text-center text-xs font-medium text-gray-600 bg-white shadow py-2 max-w-3xl mx-auto">
   <a href="index.html" class="hover:text-blue-600"><div>🏠<br>首页</div></a>
@@ -17,101 +16,8 @@
   <a href="profile.html" class="hover:text-blue-600"><div>⚙️<br>我的</div></a>
 </nav>
 
- class="flex justify-between px-4 py-3 bg-white shadow text-sm font-medium text-gray-600 max-w-3xl mx-auto">
-  <a href="index.html" class="hover:text-blue-600">首页</a>
-  <a href="assets.html" class="hover:text-blue-600">资产</a>
-  <a href="debts.html" class="text-blue-600 font-bold">负债</a>
-  <a href="reports.html" class="hover:text-blue-600">报表</a>
-  <a href="profile.html" class="hover:text-blue-600">我的</a>
-</nav>
-<header class="hidden">
-  <h1 class="text-lg font-bold text-red-600">💳 负债管理</h1>
-</header>
-<main class="max-w-3xl mx-auto px-4 py-6 p-4 max-w-3xl mx-auto space-y-6">
-
-<section id="debts" class="tab-content space-y-4">
-  <div class="bg-white shadow rounded-2xl p-6">
-    <h2 class="text-lg font-bold text-gray-700 mb-3">💳 添加负债</h2>
-    <form id="debtForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input id="debtName" placeholder="名称" class="border rounded-xl p-2" required />
-      <input id="debtAmount" type="number" placeholder="总金额" class="border rounded-xl p-2" required />
-      <input id="debtRemaining" type="number" placeholder="剩余未还" class="border rounded-xl p-2" required />
-      <input id="debtDue" type="date" class="border rounded-xl p-2" required />
-      <select id="debtCategory" class="border rounded-xl p-2">
-        <option value="信用卡">信用卡</option>
-        <option value="贷款">贷款</option>
-        <option value="借款">借款</option>
-      </select>
-      <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700 transition">➕ 添加</button>
-    </form>
-  </div>
-  <div id="debtList" class="space-y-3 pt-2"></div>
-</section>
-
+<main class="max-w-3xl mx-auto p-4">
+  <h1 class="text-lg font-bold">💳 负债页面内容</h1>
 </main>
-<script>
-
-const debtForm = document.getElementById('debtForm');
-const debtList = document.getElementById('debtList');
-
-debtForm.onsubmit = e => {
-  e.preventDefault();
-  const name = document.getElementById('debtName').value;
-  const amount = parseFloat(document.getElementById('debtAmount').value);
-  const remaining = parseFloat(document.getElementById('debtRemaining').value);
-  const dueDate = document.getElementById('debtDue').value;
-  const category = document.getElementById('debtCategory').value;
-  if (!name || isNaN(amount) || isNaN(remaining) || !dueDate) return alert("请填写完整");
-
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.push({ name, amount, remaining, dueDate, category });
-  localStorage.setItem('debts', JSON.stringify(debts));
-  debtForm.reset();
-  renderDebts();
-};
-
-function renderDebts() {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debtList.innerHTML = '';
-  const today = new Date();
-
-  debts.forEach((d, i) => {
-    const due = new Date(d.dueDate);
-    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
-    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
-
-    const card = document.createElement('div');
-    card.className = "bg-white p-4 rounded-xl shadow border-l-8 " + 
-      (d.category === "信用卡" ? "border-pink-500" :
-       d.category === "贷款" ? "border-yellow-500" : "border-indigo-500");
-
-    card.innerHTML = `
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="text-base font-semibold">${d.name}（${d.category}）</div>
-          <div class="text-xs text-gray-500">到期：${d.dueDate} <span class="text-red-600">${warn}</span></div>
-          <div class="text-sm text-gray-600">剩余：¥${d.remaining.toFixed(2)} / 总额 ¥${d.amount.toFixed(2)}</div>
-        </div>
-        <button onclick="removeDebt(${i})" class="text-red-500 hover:underline text-sm">🗑 删除</button>
-      </div>
-      <div class="w-full bg-gray-200 rounded h-2 mt-3">
-        <div class="bg-gradient-to-r from-red-400 to-red-600 h-2 rounded" style="width:${progress}%"></div>
-      </div>
-    `;
-    debtList.appendChild(card);
-  });
-}
-
-function removeDebt(i) {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.splice(i, 1);
-  localStorage.setItem('debts', JSON.stringify(debts));
-  renderDebts();
-}
-
-renderDebts();
-
-</script>
 </body>
 </html>

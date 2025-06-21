@@ -1,27 +1,12 @@
-﻿
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>资产页 - 资产领航 V6 Pro</title>
+  <title>💼 资产页面内容</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body { font-family: 'system-ui', sans-serif; }
-button { transition: all 0.3s ease; }
-button:hover { opacity: 0.9; transform: scale(1.02); }
-input, select {
-  @apply border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500;
-}
-.card {
-  @apply bg-white rounded-2xl shadow-md p-5 transition hover:shadow-lg;
-}
-</style>
-
 </head>
-<body class="bg-gray-50 text-gray-800 text-sm">
+<body class="bg-gray-50 text-sm text-gray-800">
 
 <nav class="grid grid-cols-5 text-center text-xs font-medium text-gray-600 bg-white shadow py-2 max-w-3xl mx-auto">
   <a href="index.html" class="hover:text-blue-600"><div>🏠<br>首页</div></a>
@@ -31,128 +16,8 @@ input, select {
   <a href="profile.html" class="hover:text-blue-600"><div>⚙️<br>我的</div></a>
 </nav>
 
- class="flex justify-between px-4 py-3 bg-white shadow text-sm font-medium text-gray-600 max-w-3xl mx-auto">
-  <a href="index.html" class="hover:text-blue-600">首页</a>
-  <a href="assets.html" class="text-blue-600 font-bold">资产</a>
-  <a href="debts.html" class="hover:text-blue-600">负债</a>
-  <a href="reports.html" class="hover:text-blue-600">报表</a>
-  <a href="profile.html" class="hover:text-blue-600">我的</a>
-</nav>
-<header class="hidden">
-  <h1 class="text-lg font-bold text-blue-600">💼 资产管理</h1>
-</header>
-<main class="max-w-3xl mx-auto px-4 py-6 p-4 max-w-3xl mx-auto space-y-6">
-
-<section id="assets" class="tab-content">
-  <div class="card space-y-4">
-    <h2 class="text-lg font-bold text-gray-700">💼 添加资产</h2>
-    <form id="assetForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input id="name" placeholder="资产名称" class="border rounded-xl p-2" required />
-      <input id="amount" type="number" placeholder="持有数量" class="border rounded-xl p-2" required />
-      <select id="category" class="border rounded-xl p-2">
-<option value="现金">现金</option>
-<option value="股票">股票</option>
-</select>
-<select id="currency" class="border rounded-xl p-2">
-<option value="CNY">人民币</option>
-<option value="USD">美元</option>
-<option value="HKD">港币</option>
-<option value="EUR">欧元</option>
-</select>
-        <option value="现金">现金</option>
-        <option value="股票">股票</option>
-      </select>
-      <input id="code" placeholder="股票代码（如 sh600519）" class="border rounded-xl p-2" />
-      <button type="submit" class="col-span-2 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">➕ 添加</button>
-    </form>
-  </div>
-
-  <div id="assetList" class="space-y-3 pt-4"></div>
-</section>
-
+<main class="max-w-3xl mx-auto p-4">
+  <h1 class="text-lg font-bold">💼 资产页面内容</h1>
 </main>
-<script>
-
-const assetForm = document.getElementById('assetForm');
-const assetList = document.getElementById('assetList');
-
-assetForm.onsubmit = e => {
-  e.preventDefault();
-  const name = document.getElementById('name').value.trim();
-  const amount = parseFloat(document.getElementById('amount').value);
-  const category = document.getElementById('category').value;
-  const code = document.getElementById('code').value.trim().toLowerCase();
-const currency = document.getElementById('currency').value;
-  if (!name || isNaN(amount)) return alert("请输入正确资产");
-
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  data.push({ name, amount, category, code, currency });
-  localStorage.setItem('assets', JSON.stringify(data));
-  assetForm.reset();
-  renderAssets();
-  fetchPrices();
-  renderOverview();
-};
-
-function renderAssets() {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  assetList.innerHTML = '';
-  data.forEach((a, i) => {
-    const div = document.createElement('div');
-    div.className = "bg-white p-4 rounded-xl shadow flex justify-between items-center border-l-4 " + 
-      (a.category === "股票" ? "border-blue-500" : "border-green-500");
-    div.setAttribute("data-code", a.code);
-    div.setAttribute("data-amount", a.amount);
-    div.innerHTML = `
-      <div>
-        <div class="text-base font-semibold">${a.name}</div>
-        <div class="text-xs text-gray-500">${a.category} ${a.code || ''}</div>
-        <div class="text-sm price text-gray-600">加载中...</div>
-        <div class="text-blue-600 font-bold value">--</div>
-      </div>
-      <button onclick="removeAsset(${i})" class="text-red-500 hover:underline text-sm">🗑 删除</button>
-    `;
-    assetList.appendChild(div);
-  });
-}
-
-function removeAsset(i) {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  data.splice(i, 1);
-  localStorage.setItem('assets', JSON.stringify(data));
-  renderAssets();
-  fetchPrices();
-  renderOverview();
-}
-
-function fetchPrices() {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  const codes = data.filter(a => a.category === '股票' && a.code).map(a => a.code);
-  if (!codes.length) return;
-  fetch('https://qt.gtimg.cn/q=' + codes.join(','))
-    .then(res => res.text())
-    .then(text => {
-      codes.forEach(code => {
-        const m = text.match(new RegExp(`v_${code}="(.*?)";`));
-        if (!m) return;
-        const price = parseFloat(m[1].split('~')[3]);
-        const assetData = JSON.parse(localStorage.getItem('assets') || '[]');
-        assetData.forEach(a => { if (a.code === code) a.price = price; });
-        localStorage.setItem('assets', JSON.stringify(assetData));
-
-        document.querySelectorAll('[data-code="' + code + '"]').forEach(div => {
-          const amt = parseFloat(div.getAttribute('data-amount'));
-          div.querySelector('.price').textContent = '现价 ¥' + price.toFixed(2);
-          div.querySelector('.value').textContent = '市值 ¥' + (amt * price).toFixed(2);
-        });
-        renderOverview();
-      });
-    });
-}
-
-renderAssets();
-fetchPrices();
-
-</script>
 </body>
 </html>
