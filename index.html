@@ -3,366 +3,110 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta http-equiv="Content-Language" content="zh-CN" />
-  <title>资产领航 V0</title>
-  <script src="https://cdn.tailwindcss.com">
-function showTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
-  if (el) el.classList.add('text-blue-600', 'font-bold');
-}
-window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
-
-
-document.getElementById('debtForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = document.getElementById('debtName').value;
-  const amount = parseFloat(document.getElementById('debtAmount').value);
-  const remaining = parseFloat(document.getElementById('debtRemaining').value);
-  const dueDate = document.getElementById('debtDue').value;
-  const category = document.getElementById('debtCategory').value;
-
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.push({ name, amount, remaining, dueDate, category });
-  localStorage.setItem('debts', JSON.stringify(debts));
-  e.target.reset();
-  loadDebts();
-});
-
-function loadDebts() {
-  const list = document.getElementById('debtList');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  list.innerHTML = '';
-  const today = new Date();
-
-  debts.forEach((d, i) => {
-    const due = new Date(d.dueDate);
-    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
-    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
-
-    const card = document.createElement('div');
-    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
-    card.innerHTML = `
-      <div class="font-semibold">${d.name}（${d.category}）</div>
-      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
-      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
-      <div class="w-full bg-gray-200 rounded h-2 mt-2">
-        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
-      </div>
-      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
-    `;
-    list.appendChild(card);
-  });
-}
-
-function deleteDebt(i) {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.splice(i, 1);
-  localStorage.setItem('debts', JSON.stringify(debts));
-  loadDebts();
-}
-loadDebts();
-
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-function showTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
-  if (el) el.classList.add('text-blue-600', 'font-bold');
-}
-window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
-
-
-document.getElementById('debtForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = document.getElementById('debtName').value;
-  const amount = parseFloat(document.getElementById('debtAmount').value);
-  const remaining = parseFloat(document.getElementById('debtRemaining').value);
-  const dueDate = document.getElementById('debtDue').value;
-  const category = document.getElementById('debtCategory').value;
-
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.push({ name, amount, remaining, dueDate, category });
-  localStorage.setItem('debts', JSON.stringify(debts));
-  e.target.reset();
-  loadDebts();
-});
-
-function loadDebts() {
-  const list = document.getElementById('debtList');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  list.innerHTML = '';
-  const today = new Date();
-
-  debts.forEach((d, i) => {
-    const due = new Date(d.dueDate);
-    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
-    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
-
-    const card = document.createElement('div');
-    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
-    card.innerHTML = `
-      <div class="font-semibold">${d.name}（${d.category}）</div>
-      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
-      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
-      <div class="w-full bg-gray-200 rounded h-2 mt-2">
-        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
-      </div>
-      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
-    `;
-    list.appendChild(card);
-  });
-}
-
-function deleteDebt(i) {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.splice(i, 1);
-  localStorage.setItem('debts', JSON.stringify(debts));
-  loadDebts();
-}
-loadDebts();
-
-</script>
+  <title>资产领航 V4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 text-sm">
-  <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-    <h1 class="text-lg font-bold">资产领航 · 全新起点</h1>
-  </header>
+<body class="bg-gray-50 text-sm text-gray-800">
+<header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
+  <h1 class="text-lg font-bold">资产领航 V4</h1>
+</header>
+<main class="p-4 space-y-6 max-w-xl mx-auto">
 
-  <main class="p-4 space-y-6 max-w-xl mx-auto">
-<section id="dashboard" class="tab-content">
-    <div class="bg-white shadow rounded-xl p-4">
-      <h2 class="text-base font-semibold mb-2">添加资产</h2>
-      <form id="assetForm" class="space-y-2">
-        <input id="name" placeholder="资产名称" class="w-full border rounded p-2" required />
-        <input id="amount" type="number" placeholder="持有数量" class="w-full border rounded p-2" required />
-        <select id="category" class="w-full border rounded p-2">
-          <option value="现金">现金</option>
-          <option value="股票">股票</option>
-        </select>
-        <input id="code" placeholder="股票代码（如 sh600519）" class="w-full border rounded p-2" />
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">添加</button>
-      </form>
-    </div>
-
-    
-    <!-- 总资产 + 分类图表 -->
-    <div class="bg-white shadow rounded-xl p-4 space-y-2">
-      <h2 class="text-base font-semibold">资产总览</h2>
-      <p id="totalAsset" class="text-xl font-bold text-blue-600">总资产：¥0.00</p>
-      <canvas id="assetPie" height="160"></canvas>
-    </div>
-
-    </section>
-<section id="assets" class="tab-content hidden">
-<div class="space-y-3" id="assetList"></div>
-  </section>
-
-<section id="debts" class="tab-content hidden space-y-4">
+<section id="reports" class="tab-content hidden space-y-4">
   <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">添加负债</h2>
-    <form id="debtForm" class="space-y-2">
-      <input id="debtName" placeholder="名称" class="w-full border rounded p-2" required />
-      <input id="debtAmount" type="number" placeholder="总金额" class="w-full border rounded p-2" required />
-      <input id="debtRemaining" type="number" placeholder="剩余未还" class="w-full border rounded p-2" required />
-      <input id="debtDue" type="date" class="w-full border rounded p-2" required />
-      <select id="debtCategory" class="w-full border rounded p-2">
-        <option value="信用卡">信用卡</option>
-        <option value="贷款">贷款</option>
-        <option value="借款">借款</option>
+    <h2 class="text-base font-semibold mb-2">添加收支记录</h2>
+    <form id="recordForm" class="space-y-2">
+      <select id="recordType" class="w-full border rounded p-2">
+        <option value="收入">收入</option>
+        <option value="支出">支出</option>
       </select>
-      <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">添加负债</button>
+      <input id="recordCategory" placeholder="分类（如 工资 / 餐饮）" class="w-full border rounded p-2" required />
+      <input id="recordAmount" type="number" placeholder="金额" class="w-full border rounded p-2" required />
+      <input id="recordDate" type="date" class="w-full border rounded p-2" required />
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">添加记录</button>
     </form>
   </div>
-  <div id="debtList" class="space-y-3"></div>
+
+  <div class="bg-white shadow rounded-xl p-4">
+    <h2 class="text-base font-semibold mb-2">月度收支趋势图</h2>
+    <canvas id="monthlyTrend" height="240"></canvas>
+  </div>
 </section>
+
 </main>
+<footer class="fixed bottom-0 left-0 w-full bg-white border-t shadow-inner z-10">
+  <nav class="grid grid-cols-4 text-center text-base text-gray-600">
+    <button onclick="showTab('dashboard', this)" class="py-2 font-bold text-blue-600">首页</button>
+    <button onclick="showTab('assets', this)" class="py-2 hover:text-blue-600">资产</button>
+    <button onclick="showTab('debts', this)" class="py-2 hover:text-blue-600">负债</button>
+    <button onclick="showTab('reports', this)" class="py-2 hover:text-blue-600">报表</button>
+  </nav>
+</footer>
+<script>
+function showTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
+  if (el) el.classList.add('text-blue-600', 'font-bold');
+}
+window.onload = () => showTab('reports', document.querySelector('footer nav button:last-child'));
 
+document.getElementById('recordForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const type = document.getElementById('recordType').value;
+  const category = document.getElementById('recordCategory').value;
+  const amount = parseFloat(document.getElementById('recordAmount').value);
+  const date = document.getElementById('recordDate').value;
+  if (!category || isNaN(amount) || !date) return alert("请输入完整记录");
 
-  <script>
-    const form = document.getElementById('assetForm');
-    const list = document.getElementById('assetList');
+  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+  tx.push({ type, category, amount, date });
+  localStorage.setItem('transactions', JSON.stringify(tx));
+  e.target.reset();
+  loadTrends();
+});
 
-    form.onsubmit = e => {
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const amount = parseFloat(document.getElementById('amount').value);
-      const category = document.getElementById('category').value;
-      const code = document.getElementById('code').value.trim().toLowerCase();
-      if (!name || isNaN(amount)) return alert("请输入正确资产");
+function loadTrends() {
+  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+  const incomeMap = {}, expenseMap = {}, labels = [];
 
-      const data = JSON.parse(localStorage.getItem('assets') || '[]');
-      data.push({ name, amount, category, code });
-      localStorage.setItem('assets', JSON.stringify(data));
-      form.reset();
-      renderAssets();
-    updateOverview();
-    };
-
-    function renderAssets() {
-      const data = JSON.parse(localStorage.getItem('assets') || '[]');
-      list.innerHTML = '';
-      data.forEach((a, i) => {
-        const div = document.createElement('div');
-        div.className = "bg-white p-4 rounded shadow border-l-4 " + (a.category === "股票" ? "border-blue-500" : "border-green-500");
-        div.setAttribute("data-code", a.code);
-        div.setAttribute("data-amount", a.amount);
-        div.innerHTML = `
-          <div class="font-semibold">${a.name}</div>
-          <div class="text-sm text-gray-500">${a.category} ${a.code || ''}</div>
-          <div class="text-sm price">加载中...</div>
-          <div class="text-blue-600 font-bold value">--</div>
-          <button onclick="removeAsset(${i})" class="text-red-500 text-sm mt-1 hover:underline">删除</button>
-        `;
-        list.appendChild(div);
-      });
-      fetchPrices();
-    }
-
-    function removeAsset(i) {
-      const data = JSON.parse(localStorage.getItem('assets') || '[]');
-      data.splice(i, 1);
-      localStorage.setItem('assets', JSON.stringify(data));
-      renderAssets();
-    updateOverview();
-    }
-
-    function fetchPrices() {
-      const data = JSON.parse(localStorage.getItem('assets') || '[]');
-      const codes = data.filter(a => a.category === '股票' && a.code).map(a => a.code);
-      if (!codes.length) return;
-      fetch('https://qt.gtimg.cn/q=' + codes.join(','))
-        .then(res => res.text())
-        .then(text => {
-          codes.forEach(code => {
-            const m = text.match(new RegExp(`v_${code}="(.*?)";`));
-            if (!m) return;
-            const price = parseFloat(m[1].split('~')[3]);
-  data.forEach(a => { if (a.code === code) a.price = price; });
-  localStorage.setItem("assets", JSON.stringify(data));
-            document.querySelectorAll('[data-code="' + code + '"]').forEach(div => {
-              const amt = parseFloat(div.getAttribute('data-amount'));
-              div.querySelector('.price').textContent = '现价 ¥' + price.toFixed(2);
-              div.querySelector('.value').textContent = '市值 ¥' + (amt * price).toFixed(2);
-            });
-          });
-        });
-    }
-
-    renderAssets();
-    updateOverview();
-    
-function updateOverview() {
-  const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  let total = 0;
-  const categoryMap = {};
-  data.forEach(a => {
-    const amt = parseFloat(a.amount);
-    if (a.category === '股票' && a.price) {
-      total += amt * a.price;
-      categoryMap[a.category] = (categoryMap[a.category] || 0) + amt * a.price;
-    } else {
-      total += amt;
-      categoryMap[a.category] = (categoryMap[a.category] || 0) + amt;
-    }
+  tx.forEach(t => {
+    const ym = t.date.slice(0, 7);
+    if (!labels.includes(ym)) labels.push(ym);
+    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
+    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
   });
-  document.getElementById('totalAsset').textContent = '总资产：¥' + total.toFixed(2);
 
-  const ctx = document.getElementById('assetPie').getContext('2d');
-  if (window.assetChart) window.assetChart.destroy();
-  window.assetChart = new Chart(ctx, {
-    type: 'pie',
+  labels.sort();
+  const income = labels.map(m => incomeMap[m] || 0);
+  const expense = labels.map(m => expenseMap[m] || 0);
+  const net = labels.map((_, i) => income[i] - expense[i]);
+
+  const ctx = document.getElementById('monthlyTrend').getContext('2d');
+  if (window.trendChart) window.trendChart.destroy();
+  window.trendChart = new Chart(ctx, {
+    type: 'bar',
     data: {
-      labels: Object.keys(categoryMap),
-      datasets: [{
-        data: Object.values(categoryMap),
-        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
-      }]
+      labels,
+      datasets: [
+        { label: "收入", data: income, backgroundColor: "#10b981" },
+        { label: "支出", data: expense, backgroundColor: "#ef4444" },
+        { label: "结余", data: net, backgroundColor: "#3b82f6" }
+      ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'bottom' } }
+      plugins: { legend: { position: "bottom" } },
+      scales: { y: { beginAtZero: true } }
     }
   });
 }
-
-  setInterval(fetchPrices, 60000);
-  
-function showTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
-  if (el) el.classList.add('text-blue-600', 'font-bold');
-}
-window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
-
-
-document.getElementById('debtForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = document.getElementById('debtName').value;
-  const amount = parseFloat(document.getElementById('debtAmount').value);
-  const remaining = parseFloat(document.getElementById('debtRemaining').value);
-  const dueDate = document.getElementById('debtDue').value;
-  const category = document.getElementById('debtCategory').value;
-
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.push({ name, amount, remaining, dueDate, category });
-  localStorage.setItem('debts', JSON.stringify(debts));
-  e.target.reset();
-  loadDebts();
-});
-
-function loadDebts() {
-  const list = document.getElementById('debtList');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  list.innerHTML = '';
-  const today = new Date();
-
-  debts.forEach((d, i) => {
-    const due = new Date(d.dueDate);
-    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
-    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
-
-    const card = document.createElement('div');
-    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
-    card.innerHTML = `
-      <div class="font-semibold">${d.name}（${d.category}）</div>
-      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
-      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
-      <div class="w-full bg-gray-200 rounded h-2 mt-2">
-        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
-      </div>
-      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
-    `;
-    list.appendChild(card);
-  });
-}
-
-function deleteDebt(i) {
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  debts.splice(i, 1);
-  localStorage.setItem('debts', JSON.stringify(debts));
-  loadDebts();
-}
-loadDebts();
+loadTrends();
 
 </script>
-
-<footer class="fixed bottom-0 left-0 w-full bg-white border-t shadow-inner z-10">
-  <nav class="grid grid-cols-3 text-center text-base text-gray-600">
-    <button onclick="showTab('dashboard', this)" class="py-2 font-bold text-blue-600">首页</button>
-    <button onclick="showTab('assets', this)" class="py-2 hover:text-blue-600">资产</button>
-      <button onclick="showTab('debts', this)" class="py-2 hover:text-blue-600">负债</button>
-  </nav>
-</footer>
-
 </body>
 </html>
