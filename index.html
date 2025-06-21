@@ -9,6 +9,7 @@
   <meta http-equiv="Content-Language" content="zh-CN" />
   <title>资产领航 V0</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 text-sm">
   <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
@@ -28,6 +29,14 @@
         <input id="code" placeholder="股票代码（如 sh600519）" class="w-full border rounded p-2" />
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">添加</button>
       </form>
+    </div>
+
+    
+    <!-- 总资产 + 分类图表 -->
+    <div class="bg-white shadow rounded-xl p-4 space-y-2">
+      <h2 class="text-base font-semibold">资产总览</h2>
+      <p id="totalAsset" class="text-xl font-bold text-blue-600">总资产：¥0.00</p>
+      <canvas id="assetPie" height="160"></canvas>
     </div>
 
     <div id="assetList" class="space-y-3"></div>
@@ -50,6 +59,7 @@
       localStorage.setItem('assets', JSON.stringify(data));
       form.reset();
       renderAssets();
+    updateOverview();
     };
 
     function renderAssets() {
@@ -77,6 +87,7 @@
       data.splice(i, 1);
       localStorage.setItem('assets', JSON.stringify(data));
       renderAssets();
+    updateOverview();
     }
 
     function fetchPrices() {
@@ -90,6 +101,8 @@
             const m = text.match(new RegExp(`v_${code}="(.*?)";`));
             if (!m) return;
             const price = parseFloat(m[1].split('~')[3]);
+  data.forEach(a => { if (a.code === code) a.price = price; });
+  localStorage.setItem("assets", JSON.stringify(data));
             document.querySelectorAll('[data-code="' + code + '"]').forEach(div => {
               const amt = parseFloat(div.getAttribute('data-amount'));
               div.querySelector('.price').textContent = '现价 ¥' + price.toFixed(2);
@@ -100,7 +113,43 @@
     }
 
     renderAssets();
-    setInterval(fetchPrices, 60000);
+    updateOverview();
+    
+function updateOverview() {
+  const data = JSON.parse(localStorage.getItem('assets') || '[]');
+  let total = 0;
+  const categoryMap = {};
+  data.forEach(a => {
+    const amt = parseFloat(a.amount);
+    if (a.category === '股票' && a.price) {
+      total += amt * a.price;
+      categoryMap[a.category] = (categoryMap[a.category] || 0) + amt * a.price;
+    } else {
+      total += amt;
+      categoryMap[a.category] = (categoryMap[a.category] || 0) + amt;
+    }
+  });
+  document.getElementById('totalAsset').textContent = '总资产：¥' + total.toFixed(2);
+
+  const ctx = document.getElementById('assetPie').getContext('2d');
+  if (window.assetChart) window.assetChart.destroy();
+  window.assetChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(categoryMap),
+      datasets: [{
+        data: Object.values(categoryMap),
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+}
+
+  setInterval(fetchPrices, 60000);
   </script>
 </body>
 </html>
