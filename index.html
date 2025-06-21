@@ -17,6 +17,57 @@ function showTab(id, el) {
 }
 window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
 
+
+document.getElementById('debtForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('debtName').value;
+  const amount = parseFloat(document.getElementById('debtAmount').value);
+  const remaining = parseFloat(document.getElementById('debtRemaining').value);
+  const dueDate = document.getElementById('debtDue').value;
+  const category = document.getElementById('debtCategory').value;
+
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.push({ name, amount, remaining, dueDate, category });
+  localStorage.setItem('debts', JSON.stringify(debts));
+  e.target.reset();
+  loadDebts();
+});
+
+function loadDebts() {
+  const list = document.getElementById('debtList');
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  list.innerHTML = '';
+  const today = new Date();
+
+  debts.forEach((d, i) => {
+    const due = new Date(d.dueDate);
+    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
+    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
+
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
+    card.innerHTML = `
+      <div class="font-semibold">${d.name}（${d.category}）</div>
+      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
+      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
+      <div class="w-full bg-gray-200 rounded h-2 mt-2">
+        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
+      </div>
+      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function deleteDebt(i) {
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.splice(i, 1);
+  localStorage.setItem('debts', JSON.stringify(debts));
+  loadDebts();
+}
+loadDebts();
+
 </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js">
 function showTab(id, el) {
@@ -26,6 +77,57 @@ function showTab(id, el) {
   if (el) el.classList.add('text-blue-600', 'font-bold');
 }
 window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
+
+
+document.getElementById('debtForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('debtName').value;
+  const amount = parseFloat(document.getElementById('debtAmount').value);
+  const remaining = parseFloat(document.getElementById('debtRemaining').value);
+  const dueDate = document.getElementById('debtDue').value;
+  const category = document.getElementById('debtCategory').value;
+
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.push({ name, amount, remaining, dueDate, category });
+  localStorage.setItem('debts', JSON.stringify(debts));
+  e.target.reset();
+  loadDebts();
+});
+
+function loadDebts() {
+  const list = document.getElementById('debtList');
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  list.innerHTML = '';
+  const today = new Date();
+
+  debts.forEach((d, i) => {
+    const due = new Date(d.dueDate);
+    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
+    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
+
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
+    card.innerHTML = `
+      <div class="font-semibold">${d.name}（${d.category}）</div>
+      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
+      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
+      <div class="w-full bg-gray-200 rounded h-2 mt-2">
+        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
+      </div>
+      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function deleteDebt(i) {
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.splice(i, 1);
+  localStorage.setItem('debts', JSON.stringify(debts));
+  loadDebts();
+}
+loadDebts();
 
 </script>
 </head>
@@ -62,7 +164,27 @@ window.onload = () => showTab('dashboard', document.querySelector('footer nav bu
 <section id="assets" class="tab-content hidden">
 <div class="space-y-3" id="assetList"></div>
   </section>
+
+<section id="debts" class="tab-content hidden space-y-4">
+  <div class="bg-white shadow rounded-xl p-4">
+    <h2 class="text-base font-semibold mb-2">添加负债</h2>
+    <form id="debtForm" class="space-y-2">
+      <input id="debtName" placeholder="名称" class="w-full border rounded p-2" required />
+      <input id="debtAmount" type="number" placeholder="总金额" class="w-full border rounded p-2" required />
+      <input id="debtRemaining" type="number" placeholder="剩余未还" class="w-full border rounded p-2" required />
+      <input id="debtDue" type="date" class="w-full border rounded p-2" required />
+      <select id="debtCategory" class="w-full border rounded p-2">
+        <option value="信用卡">信用卡</option>
+        <option value="贷款">贷款</option>
+        <option value="借款">借款</option>
+      </select>
+      <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">添加负债</button>
+    </form>
+  </div>
+  <div id="debtList" class="space-y-3"></div>
+</section>
 </main>
+
 
   <script>
     const form = document.getElementById('assetForm');
@@ -181,12 +303,64 @@ function showTab(id, el) {
 }
 window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
 
+
+document.getElementById('debtForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('debtName').value;
+  const amount = parseFloat(document.getElementById('debtAmount').value);
+  const remaining = parseFloat(document.getElementById('debtRemaining').value);
+  const dueDate = document.getElementById('debtDue').value;
+  const category = document.getElementById('debtCategory').value;
+
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.push({ name, amount, remaining, dueDate, category });
+  localStorage.setItem('debts', JSON.stringify(debts));
+  e.target.reset();
+  loadDebts();
+});
+
+function loadDebts() {
+  const list = document.getElementById('debtList');
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  list.innerHTML = '';
+  const today = new Date();
+
+  debts.forEach((d, i) => {
+    const due = new Date(d.dueDate);
+    const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    const warn = daysLeft <= 7 ? "⚠️ 即将到期" : "";
+    const progress = Math.min(100, ((d.amount - d.remaining) / d.amount) * 100).toFixed(1);
+
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded shadow border-l-4 border-red-500";
+    card.innerHTML = `
+      <div class="font-semibold">${d.name}（${d.category}）</div>
+      <div class="text-sm text-gray-500">剩余：¥${d.remaining} / 总额 ¥${d.amount}</div>
+      <div class="text-sm">到期日：${d.dueDate} <span class="text-red-600">${warn}</span></div>
+      <div class="w-full bg-gray-200 rounded h-2 mt-2">
+        <div class="bg-red-500 h-2 rounded" style="width:${progress}%"></div>
+      </div>
+      <button onclick="deleteDebt(${i})" class="text-red-500 text-sm mt-2 hover:underline">删除</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function deleteDebt(i) {
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  debts.splice(i, 1);
+  localStorage.setItem('debts', JSON.stringify(debts));
+  loadDebts();
+}
+loadDebts();
+
 </script>
 
 <footer class="fixed bottom-0 left-0 w-full bg-white border-t shadow-inner z-10">
-  <nav class="grid grid-cols-2 text-center text-base text-gray-600">
+  <nav class="grid grid-cols-3 text-center text-base text-gray-600">
     <button onclick="showTab('dashboard', this)" class="py-2 font-bold text-blue-600">首页</button>
     <button onclick="showTab('assets', this)" class="py-2 hover:text-blue-600">资产</button>
+      <button onclick="showTab('debts', this)" class="py-2 hover:text-blue-600">负债</button>
   </nav>
 </footer>
 
