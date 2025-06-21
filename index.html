@@ -6,44 +6,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta http-equiv="Content-Language" content="zh-CN" />
-  <title>资产领航 V4</title>
+  <title>资产领航 V5</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-sm text-gray-800">
 <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-  <h1 class="text-lg font-bold">资产领航 V4</h1>
+  <h1 class="text-lg font-bold">资产领航 V5</h1>
 </header>
 <main class="p-4 space-y-6 max-w-xl mx-auto">
+<section id="dashboard" class="tab-content">首页内容占位</section>
+<section id="assets" class="tab-content hidden">资产内容占位</section>
+<section id="debts" class="tab-content hidden">负债内容占位</section>
+<section id="reports" class="tab-content hidden">报表内容占位</section>
 
-<section id="reports" class="tab-content hidden space-y-4">
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">添加收支记录</h2>
-    <form id="recordForm" class="space-y-2">
-      <select id="recordType" class="w-full border rounded p-2">
-        <option value="收入">收入</option>
-        <option value="支出">支出</option>
-      </select>
-      <input id="recordCategory" placeholder="分类（如 工资 / 餐饮）" class="w-full border rounded p-2" required />
-      <input id="recordAmount" type="number" placeholder="金额" class="w-full border rounded p-2" required />
-      <input id="recordDate" type="date" class="w-full border rounded p-2" required />
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">添加记录</button>
-    </form>
+<section id="profile" class="tab-content hidden space-y-4">
+  <div class="bg-white shadow rounded-xl p-4 space-y-2">
+    <h2 class="text-base font-semibold mb-2">数据导出</h2>
+    <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded">📤 导出 CSV 文件</button>
   </div>
-
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">月度收支趋势图</h2>
-    <canvas id="monthlyTrend" height="240"></canvas>
+  <div class="bg-white shadow rounded-xl p-4 space-y-2">
+    <h2 class="text-base font-semibold mb-2">数据导入</h2>
+    <input type="file" id="importFile" accept=".csv" class="w-full p-2 border rounded" />
+    <button onclick="importData()" class="bg-green-600 text-white px-4 py-2 rounded">📥 导入 CSV 文件</button>
+  </div>
+  <div class="bg-white shadow rounded-xl p-4 space-y-2">
+    <h2 class="text-base font-semibold mb-2">清空所有数据</h2>
+    <button onclick="clearAll()" class="bg-red-600 text-white px-4 py-2 rounded">🗑️ 清空所有数据</button>
+    <p class="text-xs text-gray-400">注意：数据保存在浏览器，仅本机有效。</p>
   </div>
 </section>
 
 </main>
 <footer class="fixed bottom-0 left-0 w-full bg-white border-t shadow-inner z-10">
-  <nav class="grid grid-cols-4 text-center text-base text-gray-600">
+  <nav class="grid grid-cols-5 text-center text-base text-gray-600">
     <button onclick="showTab('dashboard', this)" class="py-2 font-bold text-blue-600">首页</button>
     <button onclick="showTab('assets', this)" class="py-2 hover:text-blue-600">资产</button>
     <button onclick="showTab('debts', this)" class="py-2 hover:text-blue-600">负债</button>
     <button onclick="showTab('reports', this)" class="py-2 hover:text-blue-600">报表</button>
+    <button onclick="showTab('profile', this)" class="py-2 hover:text-blue-600">我的</button>
   </nav>
 </footer>
 <script>
@@ -53,59 +54,46 @@ function showTab(id, el) {
   document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
   if (el) el.classList.add('text-blue-600', 'font-bold');
 }
-window.onload = () => showTab('reports', document.querySelector('footer nav button:last-child'));
+window.onload = () => showTab('profile', document.querySelector('footer nav button:last-child'));
 
-document.getElementById('recordForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const type = document.getElementById('recordType').value;
-  const category = document.getElementById('recordCategory').value;
-  const amount = parseFloat(document.getElementById('recordAmount').value);
-  const date = document.getElementById('recordDate').value;
-  if (!category || isNaN(amount) || !date) return alert("请输入完整记录");
-
-  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
-  tx.push({ type, category, amount, date });
-  localStorage.setItem('transactions', JSON.stringify(tx));
-  e.target.reset();
-  loadTrends();
-});
-
-function loadTrends() {
-  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
-  const incomeMap = {}, expenseMap = {}, labels = [];
-
-  tx.forEach(t => {
-    const ym = t.date.slice(0, 7);
-    if (!labels.includes(ym)) labels.push(ym);
-    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
-    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
-  });
-
-  labels.sort();
-  const income = labels.map(m => incomeMap[m] || 0);
-  const expense = labels.map(m => expenseMap[m] || 0);
-  const net = labels.map((_, i) => income[i] - expense[i]);
-
-  const ctx = document.getElementById('monthlyTrend').getContext('2d');
-  if (window.trendChart) window.trendChart.destroy();
-  window.trendChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: "收入", data: income, backgroundColor: "#10b981" },
-        { label: "支出", data: expense, backgroundColor: "#ef4444" },
-        { label: "结余", data: net, backgroundColor: "#3b82f6" }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "bottom" } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+function exportData() {
+  const data = {
+    assets: localStorage.getItem('assets') || '[]',
+    debts: localStorage.getItem('debts') || '[]',
+    transactions: localStorage.getItem('transactions') || '[]'
+  };
+  const csv = `data:text/json;charset=utf-8,` + encodeURIComponent(JSON.stringify(data, null, 2));
+  const link = document.createElement('a');
+  link.href = csv;
+  link.download = 'finapp_data_backup.json';
+  link.click();
 }
-loadTrends();
+
+function importData() {
+  const file = document.getElementById('importFile').files[0];
+  if (!file) return alert('请选择文件');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.assets) localStorage.setItem('assets', JSON.stringify(data.assets));
+      if (data.debts) localStorage.setItem('debts', JSON.stringify(data.debts));
+      if (data.transactions) localStorage.setItem('transactions', JSON.stringify(data.transactions));
+      alert('数据导入成功');
+      location.reload();
+    } catch (err) {
+      alert('文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (confirm("确定清空所有数据？此操作不可恢复")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
 
 </script>
 </body>
