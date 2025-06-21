@@ -1,249 +1,84 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta http-equiv="Content-Language" content="zh-CN" />
-  <title>资产领航 V5</title>
-  <script src="https://cdn.tailwindcss.com">
-function analyzeFinance() {
-  const assets = JSON.parse(localStorage.getItem('assets') || '[]');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
-
-  let assetTotal = 0, debtTotal = 0;
-  assets.forEach(a => assetTotal += a.category === "股票" && a.price ? a.amount * a.price : a.amount);
-  debts.forEach(d => debtTotal += parseFloat(d.remaining));
-
-  let incomeMap = {}, expenseMap = {};
-  tx.forEach(t => {
-    const ym = t.date?.slice(0, 7);
-    if (!ym) return;
-    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
-    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
-  });
-
-  const months = Object.keys(incomeMap).sort().slice(-3);
-  const recentMonth = months[months.length - 1] || '最近月份';
-  const income = incomeMap[recentMonth] || 0;
-  const expense = expenseMap[recentMonth] || 0;
-  const net = income - expense;
-  const ratio = income > 0 ? Math.round((expense / income) * 100) : 0;
-  const assetDebtRatio = debtTotal > 0 ? (assetTotal / debtTotal).toFixed(2) : '∞';
-
-  let tips = `📅 分析月份：${recentMonth}
-💰 收入：¥${income.toFixed(2)}，支出：¥${expense.toFixed(2)}，结余：¥${net.toFixed(2)}
-📊 支出占收入比：${ratio}%
-📉 资产负债比：${assetDebtRatio}`;
-
-  if (ratio > 80) tips += `
-⚠️ 支出过高，建议缩减开销、设立预算目标。`;
-  if (assetDebtRatio < 2) tips += `
-⚠️ 资产负债比偏低，注意控制债务规模。`;
-  if (net > 0) tips += `
-✅ 有稳定结余，可考虑提升储蓄或投资比例。`;
-  if (net < 0) tips += `
-⚠️ 本月支出大于收入，需警惕财务赤字。`;
-
-  document.getElementById('adviceOutput').textContent = tips;
-}
-
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-function analyzeFinance() {
-  const assets = JSON.parse(localStorage.getItem('assets') || '[]');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
-
-  let assetTotal = 0, debtTotal = 0;
-  assets.forEach(a => assetTotal += a.category === "股票" && a.price ? a.amount * a.price : a.amount);
-  debts.forEach(d => debtTotal += parseFloat(d.remaining));
-
-  let incomeMap = {}, expenseMap = {};
-  tx.forEach(t => {
-    const ym = t.date?.slice(0, 7);
-    if (!ym) return;
-    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
-    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
-  });
-
-  const months = Object.keys(incomeMap).sort().slice(-3);
-  const recentMonth = months[months.length - 1] || '最近月份';
-  const income = incomeMap[recentMonth] || 0;
-  const expense = expenseMap[recentMonth] || 0;
-  const net = income - expense;
-  const ratio = income > 0 ? Math.round((expense / income) * 100) : 0;
-  const assetDebtRatio = debtTotal > 0 ? (assetTotal / debtTotal).toFixed(2) : '∞';
-
-  let tips = `📅 分析月份：${recentMonth}
-💰 收入：¥${income.toFixed(2)}，支出：¥${expense.toFixed(2)}，结余：¥${net.toFixed(2)}
-📊 支出占收入比：${ratio}%
-📉 资产负债比：${assetDebtRatio}`;
-
-  if (ratio > 80) tips += `
-⚠️ 支出过高，建议缩减开销、设立预算目标。`;
-  if (assetDebtRatio < 2) tips += `
-⚠️ 资产负债比偏低，注意控制债务规模。`;
-  if (net > 0) tips += `
-✅ 有稳定结余，可考虑提升储蓄或投资比例。`;
-  if (net < 0) tips += `
-⚠️ 本月支出大于收入，需警惕财务赤字。`;
-
-  document.getElementById('adviceOutput').textContent = tips;
-}
-
-</script>
+  <title>资产领航 V6 Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.12.16/dist/framer-motion.umd.min.js"></script>
 </head>
-<body class="bg-gray-50 text-sm text-gray-800">
-<header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-  <h1 class="text-lg font-bold">资产领航 V5 完整版</h1>
+<body class="bg-gradient-to-br from-gray-100 to-white text-gray-800">
+<header class="bg-white shadow sticky top-0 z-50 p-4 flex justify-between items-center">
+  <h1 class="text-xl font-bold text-blue-600">📊 资产领航 V6 Pro</h1>
+  <span class="text-xs text-gray-400">智能理财 · 精准分析</span>
 </header>
-<main class="p-4 space-y-6 max-w-xl mx-auto">
 
-<section id="dashboard" class="tab-content">
-  <div class="bg-white shadow rounded-xl p-4 space-y-2">
-    <h2 class="text-base font-semibold">资产总览</h2>
-    <p id="totalAsset" class="text-xl font-bold text-blue-600">总资产：¥0.00</p>
-    <canvas id="assetPie" height="160"></canvas>
-  </div>
-</section>
+<main class="p-4 max-w-3xl mx-auto space-y-6">
+  <!-- 欢迎卡片 -->
+  <section class="bg-white rounded-2xl shadow-md p-6 transition-all hover:shadow-lg">
+    <h2 class="text-lg font-semibold text-gray-700 mb-2">👋 你好！欢迎回来</h2>
+    <p class="text-gray-500">这是你的个人资产面板，概览总资产与分类分布。</p>
+  </section>
 
-<section id="assets" class="tab-content hidden space-y-4">
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">添加资产</h2>
-    <form id="assetForm" class="space-y-2">
-      <input id="name" placeholder="资产名称" class="w-full border rounded p-2" required />
-      <input id="amount" type="number" placeholder="持有数量" class="w-full border rounded p-2" required />
-      <select id="category" class="w-full border rounded p-2">
-        <option value="现金">现金</option>
-        <option value="股票">股票</option>
-      </select>
-      <input id="code" placeholder="股票代码（如 sh600519）" class="w-full border rounded p-2" />
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">添加</button>
-    </form>
-  </div>
-  <div id="assetList" class="space-y-3"></div>
-</section>
+  <!-- 总资产卡片 -->
+  <section class="bg-white rounded-2xl shadow-md p-6">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-base font-semibold text-gray-700">💰 总资产</h2>
+      <span id="totalAsset" class="text-lg text-blue-600 font-bold">¥0.00</span>
+    </div>
+    <canvas id="assetPie" height="180"></canvas>
+  </section>
 
-<section id="debts" class="tab-content hidden space-y-4">
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">添加负债</h2>
-    <form id="debtForm" class="space-y-2">
-      <input id="debtName" placeholder="名称" class="w-full border rounded p-2" required />
-      <input id="debtAmount" type="number" placeholder="总金额" class="w-full border rounded p-2" required />
-      <input id="debtRemaining" type="number" placeholder="剩余未还" class="w-full border rounded p-2" required />
-      <input id="debtDue" type="date" class="w-full border rounded p-2" required />
-      <select id="debtCategory" class="w-full border rounded p-2">
-        <option value="信用卡">信用卡</option>
-        <option value="贷款">贷款</option>
-        <option value="借款">借款</option>
-      </select>
-      <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">添加负债</button>
-    </form>
-  </div>
-  <div id="debtList" class="space-y-3"></div>
-</section>
-
-<section id="reports" class="tab-content hidden space-y-4">
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">添加收支记录</h2>
-    <form id="recordForm" class="space-y-2">
-      <select id="recordType" class="w-full border rounded p-2">
-        <option value="收入">收入</option>
-        <option value="支出">支出</option>
-      </select>
-      <input id="recordCategory" placeholder="分类（如 工资 / 餐饮）" class="w-full border rounded p-2" required />
-      <input id="recordAmount" type="number" placeholder="金额" class="w-full border rounded p-2" required />
-      <input id="recordDate" type="date" class="w-full border rounded p-2" required />
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">添加记录</button>
-    </form>
-  </div>
-  <div class="bg-white shadow rounded-xl p-4">
-    <h2 class="text-base font-semibold mb-2">月度收支趋势图</h2>
-    <canvas id="monthlyTrend" height="240"></canvas>
-  </div>
-</section>
-
-<section id="profile" class="tab-content hidden space-y-4">
-  <div class="bg-white shadow rounded-xl p-4 space-y-2">
-    <h2 class="text-base font-semibold mb-2">数据导出</h2>
-    <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded">📤 导出 CSV 文件</button>
-  </div>
-  <div class="bg-white shadow rounded-xl p-4 space-y-2">
-    <h2 class="text-base font-semibold mb-2">数据导入</h2>
-    <input type="file" id="importFile" accept=".json" class="w-full p-2 border rounded" />
-    <button onclick="importData()" class="bg-green-600 text-white px-4 py-2 rounded">📥 导入 CSV 文件</button>
-  </div>
-  <div class="bg-white shadow rounded-xl p-4 space-y-2">
-    <h2 class="text-base font-semibold mb-2">清空所有数据</h2>
-    <button onclick="clearAll()" class="bg-red-600 text-white px-4 py-2 rounded">🗑️ 清空所有数据</button>
-    <p class="text-xs text-gray-400">注意：数据保存在浏览器，仅本机有效。</p>
-  </div>
-</section>
-
-</main>
-<footer class="fixed bottom-0 left-0 w-full bg-white border-t shadow-inner z-10">
-  <nav class="grid grid-cols-5 text-center text-base text-gray-600">
-    <button onclick="showTab('dashboard', this)" class="py-2 font-bold text-blue-600">首页</button>
-    <button onclick="showTab('assets', this)" class="py-2 hover:text-blue-600">资产</button>
-    <button onclick="showTab('debts', this)" class="py-2 hover:text-blue-600">负债</button>
-    <button onclick="showTab('reports', this)" class="py-2 hover:text-blue-600">报表</button>
-    <button onclick="showTab('profile', this)" class="py-2 hover:text-blue-600">我的</button>
+  <!-- 页面导航占位 -->
+  <nav class="grid grid-cols-5 text-sm text-gray-600 gap-1 mt-4">
+    <button class="bg-blue-50 text-blue-600 font-bold py-2 rounded-xl">首页</button>
+    <button class="hover:bg-gray-100 py-2 rounded-xl">资产</button>
+    <button class="hover:bg-gray-100 py-2 rounded-xl">负债</button>
+    <button class="hover:bg-gray-100 py-2 rounded-xl">报表</button>
+    <button class="hover:bg-gray-100 py-2 rounded-xl">我的</button>
   </nav>
-</footer>
+</main>
+
 <script>
-function showTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('footer nav button').forEach(b => b.classList.remove('text-blue-600', 'font-bold'));
-  if (el) el.classList.add('text-blue-600', 'font-bold');
-}
-window.onload = () => showTab('dashboard', document.querySelector('footer nav button'));
-// 其余模块函数在下一步注入
+function renderOverview() {
+  const assets = JSON.parse(localStorage.getItem("assets") || "[]");
+  let total = 0;
+  const categoryMap = {};
 
-function analyzeFinance() {
-  const assets = JSON.parse(localStorage.getItem('assets') || '[]');
-  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
-  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
-
-  let assetTotal = 0, debtTotal = 0;
-  assets.forEach(a => assetTotal += a.category === "股票" && a.price ? a.amount * a.price : a.amount);
-  debts.forEach(d => debtTotal += parseFloat(d.remaining));
-
-  let incomeMap = {}, expenseMap = {};
-  tx.forEach(t => {
-    const ym = t.date?.slice(0, 7);
-    if (!ym) return;
-    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
-    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
+  assets.forEach(a => {
+    const value = a.category === "股票" && a.price ? a.amount * a.price : a.amount;
+    total += value;
+    categoryMap[a.category] = (categoryMap[a.category] || 0) + value;
   });
 
-  const months = Object.keys(incomeMap).sort().slice(-3);
-  const recentMonth = months[months.length - 1] || '最近月份';
-  const income = incomeMap[recentMonth] || 0;
-  const expense = expenseMap[recentMonth] || 0;
-  const net = income - expense;
-  const ratio = income > 0 ? Math.round((expense / income) * 100) : 0;
-  const assetDebtRatio = debtTotal > 0 ? (assetTotal / debtTotal).toFixed(2) : '∞';
+  document.getElementById("totalAsset").textContent = "¥" + total.toFixed(2);
 
-  let tips = `📅 分析月份：${recentMonth}
-💰 收入：¥${income.toFixed(2)}，支出：¥${expense.toFixed(2)}，结余：¥${net.toFixed(2)}
-📊 支出占收入比：${ratio}%
-📉 资产负债比：${assetDebtRatio}`;
-
-  if (ratio > 80) tips += `
-⚠️ 支出过高，建议缩减开销、设立预算目标。`;
-  if (assetDebtRatio < 2) tips += `
-⚠️ 资产负债比偏低，注意控制债务规模。`;
-  if (net > 0) tips += `
-✅ 有稳定结余，可考虑提升储蓄或投资比例。`;
-  if (net < 0) tips += `
-⚠️ 本月支出大于收入，需警惕财务赤字。`;
-
-  document.getElementById('adviceOutput').textContent = tips;
+  const ctx = document.getElementById("assetPie").getContext("2d");
+  if (window.assetPieChart) window.assetPieChart.destroy();
+  window.assetPieChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(categoryMap),
+      datasets: [{
+        data: Object.values(categoryMap),
+        backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: { enabled: true }
+      }
+    }
+  });
 }
 
+renderOverview();
 </script>
 </body>
 </html>
