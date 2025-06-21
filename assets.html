@@ -7,6 +7,19 @@
   <title>资产页 - 资产领航 V6 Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { font-family: 'system-ui', sans-serif; }
+button { transition: all 0.3s ease; }
+button:hover { opacity: 0.9; transform: scale(1.02); }
+input, select {
+  @apply border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500;
+}
+.card {
+  @apply bg-white rounded-2xl shadow-md p-5 transition hover:shadow-lg;
+}
+</style>
+
 </head>
 <body class="bg-gray-50 text-gray-800 text-sm">
 <nav class="flex justify-between px-4 py-3 bg-white shadow text-sm font-medium text-gray-600 max-w-3xl mx-auto">
@@ -30,7 +43,7 @@
 <main class="max-w-3xl mx-auto px-4 py-6 p-4 max-w-3xl mx-auto space-y-6">
 
 <section id="assets" class="tab-content">
-  <div class="bg-white shadow rounded-2xl p-6 space-y-4">
+  <div class="card space-y-4">
     <h2 class="text-lg font-bold text-gray-700">💼 添加资产</h2>
     <form id="assetForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <input id="name" placeholder="资产名称" class="border rounded-xl p-2" required />

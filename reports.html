@@ -7,6 +7,19 @@
   <title>报表 - 多币种</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { font-family: 'system-ui', sans-serif; }
+button { transition: all 0.3s ease; }
+button:hover { opacity: 0.9; transform: scale(1.02); }
+input, select {
+  @apply border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500;
+}
+.card {
+  @apply bg-white rounded-2xl shadow-md p-5 transition hover:shadow-lg;
+}
+</style>
+
 </head>
 <body class="bg-gray-50 text-gray-800 text-sm">
 <nav class="flex justify-between px-4 py-3 bg-white shadow text-sm font-medium text-gray-600 max-w-3xl mx-auto">
@@ -26,7 +39,7 @@
 </nav>
 
 <main class="max-w-3xl mx-auto px-4 py-6 space-y-6">
-  <section class="bg-white shadow rounded-2xl p-6 space-y-3">
+  <section class="card space-y-3">
     <h2 class="text-base font-semibold text-gray-700">添加记录</h2>
     <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <select id="recordType" class="border rounded-xl p-2">
@@ -46,7 +59,7 @@
     </form>
   </section>
 
-  <section class="bg-white shadow rounded-2xl p-6 space-y-4">
+  <section class="card space-y-4">
     <div class="flex flex-wrap gap-3 justify-between items-center">
       <h2 class="text-base font-semibold text-gray-700">📊 收支趋势图</h2>
       <div class="flex gap-2 items-center text-xs">
