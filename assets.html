@@ -28,6 +28,15 @@
       <input id="name" placeholder="资产名称" class="border rounded-xl p-2" required />
       <input id="amount" type="number" placeholder="持有数量" class="border rounded-xl p-2" required />
       <select id="category" class="border rounded-xl p-2">
+<option value="现金">现金</option>
+<option value="股票">股票</option>
+</select>
+<select id="currency" class="border rounded-xl p-2">
+<option value="CNY">人民币</option>
+<option value="USD">美元</option>
+<option value="HKD">港币</option>
+<option value="EUR">欧元</option>
+</select>
         <option value="现金">现金</option>
         <option value="股票">股票</option>
       </select>
@@ -51,10 +60,11 @@ assetForm.onsubmit = e => {
   const amount = parseFloat(document.getElementById('amount').value);
   const category = document.getElementById('category').value;
   const code = document.getElementById('code').value.trim().toLowerCase();
+const currency = document.getElementById('currency').value;
   if (!name || isNaN(amount)) return alert("请输入正确资产");
 
   const data = JSON.parse(localStorage.getItem('assets') || '[]');
-  data.push({ name, amount, category, code });
+  data.push({ name, amount, category, code, currency });
   localStorage.setItem('assets', JSON.stringify(data));
   assetForm.reset();
   renderAssets();
