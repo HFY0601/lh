@@ -4,127 +4,124 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>报表页 - 资产领航 V6 Pro</title>
+  <title>我的 - 资产领航 V6 Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-sm text-gray-800">
 <header class="bg-white shadow px-4 py-3 sticky top-0 z-10">
-  <h1 class="text-lg font-bold text-green-600">📈 收支趋势报表</h1>
+  <h1 class="text-lg font-bold text-purple-600">⚙️ 我的设置</h1>
 </header>
 <main class="p-4 max-w-3xl mx-auto space-y-6">
 
-  <section class="bg-white shadow rounded-2xl p-6 space-y-3">
-    <h2 class="text-base font-semibold text-gray-700">添加记录</h2>
-    <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <select id="recordType" class="border rounded-xl p-2">
-        <option value="收入">收入</option>
-        <option value="支出">支出</option>
-      </select>
-      <input id="recordCategory" placeholder="分类（如 工资 / 餐饮）" class="border rounded-xl p-2" required />
-      <input id="recordAmount" type="number" placeholder="金额" class="border rounded-xl p-2" required />
-      <input id="recordDate" type="date" class="border rounded-xl p-2" required />
-      <button type="submit" class="col-span-2 bg-green-600 text-white py-2 rounded-xl">➕ 添加记录</button>
-    </form>
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">📤 数据导出</h2>
+    <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded-xl">导出备份</button>
   </section>
 
-  <section class="bg-white shadow rounded-2xl p-6 space-y-4">
-    <div class="flex flex-wrap gap-3 justify-between items-center">
-      <h2 class="text-base font-semibold text-gray-700">📊 收支趋势图</h2>
-      <div class="flex items-center gap-2">
-        <label class="text-xs text-gray-500">分类：</label>
-        <select id="filterCategory" class="border rounded p-1 text-sm">
-          <option value="全部">全部</option>
-        </select>
-        <label class="text-xs text-gray-500">维度：</label>
-        <select id="filterMode" class="border rounded p-1 text-sm">
-          <option value="month">月</option>
-          <option value="quarter">季</option>
-          <option value="year">年</option>
-        </select>
-      </div>
-    </div>
-    <canvas id="trendChart" height="300"></canvas>
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">📥 数据导入</h2>
+    <input type="file" id="importFile" accept=".json" class="border p-2 rounded w-full" />
+    <button onclick="importData()" class="bg-green-600 text-white px-4 py-2 rounded-xl">导入数据</button>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">🗑️ 清空所有数据</h2>
+    <button onclick="clearAll()" class="bg-red-600 text-white px-4 py-2 rounded-xl">清空本地缓存</button>
+    <p class="text-xs text-gray-400">数据保存在浏览器本地，仅当前设备有效。</p>
+  </section>
+
+  <section class="bg-white shadow rounded-2xl p-6 space-y-2">
+    <h2 class="text-base font-semibold text-gray-700">🧠 AI 理财分析建议</h2>
+    <button onclick="analyzeFinance()" class="bg-purple-600 text-white px-4 py-2 rounded-xl">生成建议</button>
+    <pre id="adviceOutput" class="text-sm text-gray-700 bg-gray-100 rounded-xl p-3 whitespace-pre-line"></pre>
   </section>
 
 </main>
 
 <script>
-document.getElementById("recordForm").onsubmit = e => {
-  e.preventDefault();
-  const type = document.getElementById("recordType").value;
-  const category = document.getElementById("recordCategory").value;
-  const amount = parseFloat(document.getElementById("recordAmount").value);
-  const date = document.getElementById("recordDate").value;
-  if (!category || isNaN(amount) || !date) return alert("请输入完整记录");
-
-  const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
-  tx.push({ type, category, amount, date });
-  localStorage.setItem("transactions", JSON.stringify(tx));
-  e.target.reset();
-  loadTrends();
-};
-
-function getPeriod(dateStr, mode) {
-  const d = new Date(dateStr);
-  if (mode === "year") return d.getFullYear().toString();
-  if (mode === "quarter") return d.getFullYear() + "Q" + (Math.floor(d.getMonth() / 3) + 1);
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0');
+function exportData() {
+  const data = {
+    assets: JSON.parse(localStorage.getItem('assets') || '[]'),
+    debts: JSON.parse(localStorage.getItem('debts') || '[]'),
+    transactions: JSON.parse(localStorage.getItem('transactions') || '[]')
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'finapp_backup.json';
+  link.click();
 }
 
-function loadTrends() {
-  const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
-  const filterCat = document.getElementById("filterCategory").value;
-  const mode = document.getElementById("filterMode").value;
-
-  const incomeMap = {}, expenseMap = {}, labelsSet = new Set(), cats = new Set();
-
-  tx.forEach(t => {
-    cats.add(t.category);
-    if (filterCat !== "全部" && t.category !== filterCat) return;
-    const key = getPeriod(t.date, mode);
-    labelsSet.add(key);
-    if (t.type === "收入") incomeMap[key] = (incomeMap[key] || 0) + t.amount;
-    if (t.type === "支出") expenseMap[key] = (expenseMap[key] || 0) + t.amount;
-  });
-
-  const labels = Array.from(labelsSet).sort();
-  const income = labels.map(k => incomeMap[k] || 0);
-  const expense = labels.map(k => expenseMap[k] || 0);
-  const net = labels.map((_, i) => income[i] - expense[i]);
-
-  const ctx = document.getElementById("trendChart").getContext("2d");
-  if (window.trendChart) window.trendChart.destroy();
-  window.trendChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { type: "bar", label: "收入", data: income, backgroundColor: "#10b981" },
-        { type: "bar", label: "支出", data: expense, backgroundColor: "#ef4444" },
-        { type: "line", label: "结余", data: net, borderColor: "#3b82f6", tension: 0.3 }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "bottom" } },
-      scales: { y: { beginAtZero: true } }
+function importData() {
+  const file = document.getElementById('importFile').files[0];
+  if (!file) return alert('请选择文件');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.assets) localStorage.setItem('assets', JSON.stringify(data.assets));
+      if (data.debts) localStorage.setItem('debts', JSON.stringify(data.debts));
+      if (data.transactions) localStorage.setItem('transactions', JSON.stringify(data.transactions));
+      alert('数据导入成功，页面将刷新');
+      location.reload();
+    } catch (err) {
+      alert('文件格式错误');
     }
-  });
-
-  const catSelect = document.getElementById("filterCategory");
-  catSelect.innerHTML = '<option value="全部">全部</option>';
-  Array.from(cats).sort().forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = c;
-    catSelect.appendChild(opt);
-  });
+  };
+  reader.readAsText(file);
 }
 
-document.getElementById("filterCategory").onchange =
-document.getElementById("filterMode").onchange = loadTrends;
+function clearAll() {
+  if (confirm("确定清空所有数据？此操作无法恢复")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
 
-loadTrends();
+function analyzeFinance() {
+  const assets = JSON.parse(localStorage.getItem('assets') || '[]');
+  const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+  const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+
+  let assetTotal = 0, debtTotal = 0;
+  assets.forEach(a => {
+    const value = a.category === "股票" && a.price ? a.amount * a.price : a.amount;
+    assetTotal += value;
+  });
+  debts.forEach(d => debtTotal += parseFloat(d.remaining));
+
+  let incomeMap = {}, expenseMap = {};
+  tx.forEach(t => {
+    const ym = t.date?.slice(0, 7);
+    if (!ym) return;
+    if (t.type === "收入") incomeMap[ym] = (incomeMap[ym] || 0) + t.amount;
+    if (t.type === "支出") expenseMap[ym] = (expenseMap[ym] || 0) + t.amount;
+  });
+
+  const months = Object.keys(incomeMap).sort().slice(-3);
+  const recentMonth = months[months.length - 1] || '最近月份';
+  const income = incomeMap[recentMonth] || 0;
+  const expense = expenseMap[recentMonth] || 0;
+  const net = income - expense;
+  const ratio = income > 0 ? Math.round((expense / income) * 100) : 0;
+  const assetDebtRatio = debtTotal > 0 ? (assetTotal / debtTotal).toFixed(2) : '∞';
+
+  let tips = `📅 分析月份：${recentMonth}
+💰 收入：¥${income.toFixed(2)}，支出：¥${expense.toFixed(2)}，结余：¥${net.toFixed(2)}
+📊 支出占收入比：${ratio}%
+📉 资产负债比：${assetDebtRatio}`;
+
+  if (ratio > 80) tips += `
+⚠️ 支出过高，建议缩减开销、设立预算目标。`;
+  if (assetDebtRatio < 2) tips += `
+⚠️ 资产负债比偏低，注意控制债务规模。`;
+  if (net > 0) tips += `
+✅ 有稳定结余，可考虑提升储蓄或投资比例。`;
+  if (net < 0) tips += `
+⚠️ 本月支出大于收入，需警惕财务赤字。`;
+
+  document.getElementById('adviceOutput').textContent = tips;
+}
 </script>
 </body>
 </html>
